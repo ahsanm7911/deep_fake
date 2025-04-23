@@ -2,6 +2,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
 }
 .sidebar {
     min-height: 100vh;
@@ -16,8 +17,6 @@ body {
         min-height: auto;
     }
 }
-
-/* Sidebar Link Styles */
 .nav-link {
     color: #333;
     padding: 10px 15px;
@@ -32,4 +31,89 @@ body {
     background-color: #007bff;
     color: white;
     font-weight: bold;
+}
+.chart-container {
+    max-width: 600px;
+    margin: 20px auto;
+}
+.card {
+    margin-bottom: 20px;
+}
+
+/* Dashboard-specific styles */
+.dashboard-container {
+    margin-top: 20px;
+}
+.card {
+    border: none;
+    border-radius: 15px;
+    background-color: #fff;
+    transition: transform 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.dropzone {
+    border: 2px dashed #007bff;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: border-color 0.3s, background-color 0.3s;
+}
+.dropzone:hover, .dropzone.active {
+    border-color: #28a745;
+    background-color: #e9ecef;
+}
+.dropzone-content {
+    display: block;
+}
+#image-preview {
+    max-height: 200px;
+    border-radius: 10px;
+}
+.btn-gradient {
+    background: linear-gradient(90deg, #007bff, #00d4ff);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-gradient:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+.btn-outline-gradient {
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    background: linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #007bff, #00d4ff) border-box;
+    color: #007bff;
+    padding: 8px 18px;
+    transition: transform 0.2s;
+}
+.btn-outline-gradient:hover {
+    transform: scale(1.05);
+}
+.result-container {
+    animation: fadeIn 0.5s ease-in;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.badge-real {
+    background-color: #28a745;
+    color: white;
+}
+.badge-fake {
+    background-color: #dc3545;
+    color: white;
+}
+.progress {
+    height: 20px;
+    border-radius: 10px;
+}
+.progress-bar {
+    transition: width 0.5s ease-in-out;
 }

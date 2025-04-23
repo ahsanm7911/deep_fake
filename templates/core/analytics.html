@@ -1,0 +1,40 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Analytics{% endblock %}
+{% block extra_css %}
+<style>
+    .chart-container {
+        max-width: 600px;
+        margin: 20px auto;
+    }
+    .card {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<h2>Analytics</h2>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Total Scans</h5>
+                <p class="card-text" id="total-scans">Loading...</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="chart-container">
+    <canvas id="fakeRealChart"></canvas>
+</div>
+<div class="chart-container">
+    <canvas id="trendChart"></canvas>
+</div>
+<div class="chart-container">
+    <canvas id="confidenceChart"></canvas>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/analytics.js' %}"></script>
+{% endblock %}

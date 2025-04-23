@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent - Your Intelligent Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <style>
+        .animate-intro {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 1s ease-out forwards;
+        }
+        .animate-cta:hover {
+            transform: scale(1.05);
+            transition: transform 0.3s ease;
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .section-padding {
+            padding: 5rem 0;
+        }
+        .feature-icon {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        #header {
+            background-color: #5941F2 !important;
+        }
+        #cta, #pricing1, #pricing2, #pricing3 {
+            background-color: #5941F2 !important;
+            border: 2px solid #5941F2;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="bg-primary text-white py-4" id="header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">DeepFake Detection</h1>
+                <nav>
+                    <a href="#features" class="text-white mx-3 text-decoration-none">Features</a>
+                    <a href="#about" class="text-white mx-3 text-decoration-none">About</a>
+                    <a href="#pricing" class="text-white mx-3 text-decoration-none">Pricing</a>
+                    <a href="#faq" class="text-white mx-3 text-decoration-none">FAQ</a>
+                    <a href="#contact" class="text-white mx-3 text-decoration-none">Contact</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="bg-light section-padding text-center">
+        <div class="container">
+            <h2 class="display-4 fw-bold mb-4 animate-intro">Detect the Fake. Trust the Real.</h2>
+            <p class="lead mb-5 animate-intro" style="animation-delay: 0.2s;">
+                Our AI-powered system instantly analyzes images to detect deepfakes and synthetic content—helping you separate fact from fiction with confidence.
+            </p>
+            <a href="/login" class="btn btn-primary btn-lg animate-cta" id="cta">Try Now</a>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="section-padding">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5">How It Works</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 text-center p-4">
+                        <span class="feature-icon">📷</span>
+                        <h3 class="h5 fw-bold">Input the Image</h3>
+                        <p>Start by uploading the image in question.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 text-center p-4">
+                        <span class="feature-icon">🔍</span>
+                        <h3 class="h5 fw-bold">Run Detection</h3>
+                        <p>The system processes and delivers a real vs AI verdict.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 text-center p-4">
+                        <span class="feature-icon">💾</span>
+                        <h3 class="h5 fw-bold">Store & Report</h3>
+                        <p>Results are saved and exported as a professional PDF.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us -->
+    <section id="about" class="bg-light section-padding">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5">About Us</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h3 class="h5 fw-bold">Project Background</h3>
+                    <p>
+                        In a world where synthetic media is rapidly advancing, the line between real and AI-generated content is becoming harder to see. Our project was born out of the urgent need to combat misinformation and ensure authenticity in digital imagery. Leveraging state-of-the-art deep learning models, we developed a system that helps individuals and organizations quickly detect deepfakes with confidence and clarity.
+                    </p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3 class="h5 fw-bold">Our Mission</h3>
+                    <p>
+                        Our mission is simple: defend truth in the digital age. We aim to empower users with reliable tools to identify AI-generated content, combat the spread of disinformation, and foster a more trustworthy media ecosystem. We believe in using AI not just to create—but to protect.
+
+
+                    </p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3 class="h5 fw-bold">Our Team</h3>
+                    <p>
+                        We're a passionate team of AI researchers, engineers, and truth-seekers united by a common goal: making the internet a more transparent place. With backgrounds in computer vision, cybersecurity, and ethics in AI, we bring a multidisciplinary approach to tackling one of today's most pressing tech challenges. Together, we’re building solutions that matter.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="section-padding">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5">Transparent Pricing for Every Need
+
+            </h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 text-center p-4">
+                        <h3 class="h5 fw-bold mb-3">Starter</h3>
+                        <p class="display-6 fw-bold mb-4">$9/mo</p>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2">For individuals & light users</li>
+                            <li class="mb-2">Email Support</li>
+                            <li class="mb-2">5GB Storage</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary animate-cta" id="pricing1">Choose Plan</a>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 text-center p-4">
+                        <h3 class="h5 fw-bold mb-3">Pro</h3>
+                        <p class="display-6 fw-bold mb-4">$29/mo</p>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2">For regular users & small teams</li>
+                            <li class="mb-2">Priority Support</li>
+                            <li class="mb-2">50GB Storage</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary animate-cta" id="pricing2">Choose Plan</a>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 text-center p-4">
+                        <h3 class="h5 fw-bold mb-3">Enterprise</h3>
+                        <p class="display-6 fw-bold mb-4">Contact Us</p>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2">For organizations & heavy-duty use</li>
+                            <li class="mb-2">Dedicated Support</li>
+                            <li class="mb-2">Unlimited Storage</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary animate-cta" id="pricing3">Choose Plan</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="bg-light section-padding">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5">Frequently Asked Questions</h2>
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse0" aria-expanded="false" aria-controls="collapse0">
+                            How does AI Agent handle deepfakes?
+                        </button>
+                    </h2>
+                    <div id="collapse0" class="accordion-collapse collapse" aria-labelledby="heading0" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            We prioritize ethical AI use and implement strict protocols to detect and prevent deepfake-related misuse, ensuring our platform remains trustworthy.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading1">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
+                            What makes your AI technology unique?
+                        </button>
+                    </h2>
+                    <div id="collapse1" class="accordion-collapse collapse" aria-labelledby="heading1" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Our AI combines advanced machine learning with user-centric design, offering personalized automation and insights tailored to your needs.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading2">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                            Is AI Agent safe to use?
+                        </button>
+                    </h2>
+                    <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="heading2" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes, we use robust encryption, regular audits, and compliance with global data protection standards to ensure your data and interactions are secure.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="bg-dark text-white py-5">
+        <div class="container text-center">
+            <p class="mb-3">Contact us: raja.zeeshan3735@gmail.com</p>
+            <p>© 2025 DeepFake Detection. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

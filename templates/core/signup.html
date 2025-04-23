@@ -1,6 +1,14 @@
 <!-- templates/signup.html -->
 {% extends 'core/base.html' %}
 {% block title %}Sign Up{% endblock %}
+{% block extra_css %}
+<style>
+    button {
+        background-color: #5941F2 !important;
+        border: 2px solid #5941F2 !important;
+    }
+</style>
+{% endblock %}
 {% block auth_content %}
 <div class="container">
     <div class="row justify-content-center mt-5">

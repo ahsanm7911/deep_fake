@@ -1,7 +1,30 @@
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        console.log("Doc Cookie: ", document.cookie)
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 document.getElementById('detect-btn').addEventListener('click', async () => {
     const fileInput = document.getElementById('image-upload');
     if (!fileInput.files[0]) {
         alert('Please upload an image.');
+        return;
+    }
+    const token = localStorage.getItem('token')
+    console.log("Token: ", token)
+    if (!token) {
+        alert('Please log in to access this feature.');
+        window.location.href = '/login/';
         return;
     }
     const formData = new FormData();
@@ -11,10 +34,14 @@ document.getElementById('detect-btn').addEventListener('click', async () => {
             method: 'POST',
             body: formData,
             headers: {
-                // Add authentication header if needed, e.g., 'Authorization': 'Bearer <token>'
+                'Authorization': `Bearer ${token}`
             }
         });
         if (!response.ok) {
+            if (response.status === 401) {
+                alert('Session expired. Please log in again.');
+                window.location.href = '/login/';
+            }
             throw new Error('Detection failed');
         }
         const result = await response.json(); // Expected: { result: "Real" or "Fake", confidence: 0.95 }
@@ -27,19 +54,30 @@ document.getElementById('detect-btn').addEventListener('click', async () => {
     }
 });
 
+
 document.getElementById('generate-pdf').addEventListener('click', async () => {
     const fileInput = document.getElementById('image-upload');
     const result = document.getElementById('result-text').textContent;
+    const token = localStorage.getItem('token')
+    if (!token) {
+        alert('Please log in to access this feature.');
+        window.location.href = '/login/';
+        return;
+    }
     try {
         const response = await fetch('/api/generate-pdf', {
             method: 'POST',
             body: JSON.stringify({ image: fileInput.files[0].name, result }),
             headers: {
                 'Content-Type': 'application/json',
-                // Add authentication header if needed
+                'Authorization': `Bearer ${token}`
             }
         });
         if (!response.ok) {
+            if (response.status === 401) {
+                alert('Session expired. Please log in again.');
+                window.location.href = '/login/';
+            }
             throw new Error('PDF generation failed');
         }
         const blob = await response.blob();
@@ -54,3 +92,5 @@ document.getElementById('generate-pdf').addEventListener('click', async () => {
         alert('PDF generation failed.');
     }
 });
+
+

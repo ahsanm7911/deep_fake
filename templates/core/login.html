@@ -1,6 +1,15 @@
-<!-- templates/login.html -->
+
 {% extends 'core/base.html' %}
+{% load static %}
 {% block title %}Login{% endblock %}
+{% block extra_css %}
+<style>
+    button {
+        background-color: #5941F2 !important;
+        border: 2px solid #5941F2 !important;
+    }
+</style>
+{% endblock %}
 {% block auth_content %}
 <div class="container">
     <div class="row justify-content-center mt-5">
@@ -12,6 +21,9 @@
                     {{ message }}
                 {% endfor %}
             </div>
+            {% endif %}
+            {% if token %}
+                <div>Token: {{ token.access }}</div>
             {% endif %}
             <form method="POST" action="{% url 'login' %}">
                 {% csrf_token %}
@@ -29,4 +41,13 @@
         </div>
     </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+    <script src="{% static 'js/auth.js' %}"></script>
+    {% if success and token %}
+        <script>
+            localStorage.setItem('token', '{{ token.access | escapejs }}');
+            window.location.href = '{% url 'dashboard' %}';
+        </script>
+    {% endif %}
 {% endblock %}
