@@ -1,0 +1,32 @@
+<!-- templates/login.html -->
+{% extends 'core/base.html' %}
+{% block title %}Login{% endblock %}
+{% block auth_content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6 col-lg-4">
+            <h2 class="text-center mb-4">Login</h2>
+            {% if messages%}
+            <div class="alert alert-danger">
+                {% for message in messages %}
+                    {{ message }}
+                {% endfor %}
+            </div>
+            {% endif %}
+            <form method="POST" action="{% url 'login' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+                <p class="mt-3 text-center">Don't have an account? <a href="{% url 'signup' %}">Sign Up</a></p>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}History{% endblock %}
+{% block content %}
+<h2>History</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Image</th>
+            <th>Image Name</th>
+            <th>Result</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for record in history %}
+        <tr>
+            <td>{{ record.date }}</td>
+            <td>
+                {% if record.image %}
+                    <img src="{{ record.image.url }}" alt="{{ record.image_name }}" style="max-width: 100px; height: auto;">
+                {% else %}
+                    No image
+                {% endif %}
+            </td>
+            <td>{{ record.image_name }}</td>
+            <td>{{ record.result }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4">No history available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
