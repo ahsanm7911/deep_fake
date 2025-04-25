@@ -1,96 +1,153 @@
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        console.log("Doc Cookie: ", document.cookie)
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
+console.log("deepfake.js loaded.")
+document.addEventListener('DOMContentLoaded', function() {
+    // Verify elements exist
+    const dropZone = document.getElementById('dropZone');
+    const imageInput = document.getElementById('imageInput');
+    const detectButton = document.getElementById('detectButton');
+    const resultDiv = document.getElementById('result');
+    const progressBar = document.getElementById('progress');
+    const progressBarInner = progressBar ? progressBar.querySelector('.progress-bar') : null;
+    const recentActivity = document.getElementById('recentActivity');
 
-document.getElementById('detect-btn').addEventListener('click', async () => {
-    const fileInput = document.getElementById('image-upload');
-    if (!fileInput.files[0]) {
-        alert('Please upload an image.');
+    if (!dropZone || !imageInput || !detectButton || !resultDiv || !progressBarInner || !recentActivity) {
+        console.error('Missing DOM elements:', {
+            dropZone: !!dropZone,
+            imageInput: !!imageInput,
+            detectButton: !!detectButton,
+            resultDiv: !!resultDiv,
+            progressBarInner: !!progressBarInner,
+            recentActivity: !!recentActivity
+        });
         return;
     }
-    const token = localStorage.getItem('token')
-    console.log("Token: ", token)
-    if (!token) {
-        alert('Please log in to access this feature.');
-        window.location.href = '/login/';
-        return;
+
+    // Handle drag-and-drop
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+        console.log('Dragover event triggered');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+        console.log('Dragleave event triggered');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            imageInput.files = files;
+            displayPreview(files[0]);
+            console.log('File dropped:', files[0].name);
+        }
+    });
+
+    // Handle file input change
+    imageInput.addEventListener('change', () => {
+        if (imageInput.files.length > 0) {
+            displayPreview(imageInput.files[0]);
+            console.log('File selected via input:', imageInput.files[0].name);
+        }
+    });
+
+    // Click to trigger file input
+    dropZone.addEventListener('click', () => {
+        imageInput.click();
+        console.log('Drop zone clicked to open file input');
+    });
+
+    // Display image preview
+    function displayPreview(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            dropZone.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+            console.log('Preview displayed for file:', file.name);
+        };
+        reader.onerror = () => {
+            console.error('Error reading file:', file.name);
+        };
+        reader.readAsDataURL(file);
     }
-    const formData = new FormData();
-    formData.append('image', fileInput.files[0]);
-    try {
-        const response = await fetch('/api/detect', {
+
+    // Handle detect button click
+    detectButton.addEventListener('click', () => {
+        if (!imageInput.files[0]) {
+            resultDiv.innerHTML = '<div class="alert alert-warning">Please upload an image first.</div>';
+            console.log('Detect button clicked without image');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', imageInput.files[0]);
+
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            resultDiv.innerHTML = '<div class="alert alert-danger">Please log in again.</div>';
+            console.error('No JWT token found in localStorage');
+            return;
+        }
+
+        resultDiv.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+        detectButton.disabled = true;
+        console.log('Detect button clicked, sending request to /api/detect');
+
+        fetch('/api/detect', {
             method: 'POST',
-            body: formData,
             headers: {
                 'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        })
+        .then(response => {
+            console.log('Fetch response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            resultDiv.innerHTML = '';
+            detectButton.disabled = false;
+            console.log('Fetch response data:', data);
+
+            if (data.error) {
+                resultDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                console.error('API error:', data.error);
+                return;
             }
+
+            const result = data.result;
+            const confidence = (data.confidence * 100).toFixed(2);
+            const badgeClass = result === 'Real' ? 'bg-success' : 'bg-danger';
+
+            resultDiv.innerHTML = `
+                <span class="badge ${badgeClass}">${result}</span>
+                <p>Confidence: ${confidence}%</p>
+            `;
+            progressBarInner.style.width = `${confidence}%`;
+            progressBarInner.classList.remove('bg-success', 'bg-danger');
+            progressBarInner.classList.add(result === 'Real' ? 'bg-success' : 'bg-danger');
+            console.log('Result displayed:', { result, confidence });
+
+            // Update recent activity
+            const timestamp = new Date().toLocaleString();
+            const activityItem = `
+                <div class="list-group-item">
+                    <i class="fas fa-image me-2"></i>
+                    Image detected as <strong>${result}</strong> (${confidence}% confidence) at ${timestamp}
+                </div>
+            `;
+            recentActivity.innerHTML = activityItem + recentActivity.innerHTML;
+            if (recentActivity.children.length > 5) {
+                recentActivity.removeChild(recentActivity.lastChild);
+            }
+            console.log('Recent activity updated');
+        })
+        .catch(error => {
+            resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            detectButton.disabled = false;
+            console.error('Fetch error:', error.message);
         });
-        if (!response.ok) {
-            if (response.status === 401) {
-                alert('Session expired. Please log in again.');
-                window.location.href = '/login/';
-            }
-            throw new Error('Detection failed');
-        }
-        const result = await response.json(); // Expected: { result: "Real" or "Fake", confidence: 0.95 }
-        document.getElementById('result-text').textContent = `${result.result} (Confidence: ${(result.confidence * 100).toFixed(2)}%)`;
-        document.getElementById('result').style.display = 'block';
-        document.getElementById('generate-pdf').style.display = 'inline-block';
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Detection failed.');
-    }
+    });
+
+    console.log('deepfake.js loaded successfully');
 });
-
-
-document.getElementById('generate-pdf').addEventListener('click', async () => {
-    const fileInput = document.getElementById('image-upload');
-    const result = document.getElementById('result-text').textContent;
-    const token = localStorage.getItem('token')
-    if (!token) {
-        alert('Please log in to access this feature.');
-        window.location.href = '/login/';
-        return;
-    }
-    try {
-        const response = await fetch('/api/generate-pdf', {
-            method: 'POST',
-            body: JSON.stringify({ image: fileInput.files[0].name, result }),
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        if (!response.ok) {
-            if (response.status === 401) {
-                alert('Session expired. Please log in again.');
-                window.location.href = '/login/';
-            }
-            throw new Error('PDF generation failed');
-        }
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'deepfake_report.pdf';
-        a.click();
-        window.URL.revokeObjectURL(url);
-    } catch (error) {
-        console.error('Error:', error);
-        alert('PDF generation failed.');
-    }
-});
-
-

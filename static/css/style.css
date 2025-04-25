@@ -1,3 +1,8 @@
+/* Color Schemes 
+bg -->      #5941F2
+text -->    #f8f9fa
+ */
+
 body {
     min-height: 100vh;
     display: flex;
@@ -6,7 +11,10 @@ body {
 }
 .sidebar {
     min-height: 100vh;
-    background-color: #f8f9fa;
+    background-color: #5941F2;
+}
+.sidebar h4 {
+    color: #e9ecef;
 }
 .content {
     flex: 1;
@@ -18,17 +26,17 @@ body {
     }
 }
 .nav-link {
-    color: #333;
+    color: #fff;
     padding: 10px 15px;
     border-radius: 5px;
     transition: background-color 0.3s, color 0.3s;
 }
 .nav-link:hover {
     background-color: #e9ecef;
-    color: #007bff;
+    color: #5941F2;
 }
 .nav-link.active {
-    background-color: #007bff;
+    background-color: #5941F2;
     color: white;
     font-weight: bold;
 }
@@ -54,7 +62,7 @@ body {
     transform: translateY(-5px);
 }
 .dropzone {
-    border: 2px dashed #007bff;
+    border: 2px dashed #5941F2;
     border-radius: 10px;
     padding: 20px;
     text-align: center;
@@ -74,7 +82,7 @@ body {
     border-radius: 10px;
 }
 .btn-gradient {
-    background: linear-gradient(90deg, #007bff, #00d4ff);
+    background: linear-gradient(90deg, #5941F2, #5941F2);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -87,7 +95,7 @@ body {
 .btn-outline-gradient {
     border: 2px solid transparent;
     background-clip: padding-box;
-    background: linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #007bff, #00d4ff) border-box;
+    background: linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #5941F2, #5941F2) border-box;
     color: #007bff;
     padding: 8px 18px;
     transition: transform 0.2s;

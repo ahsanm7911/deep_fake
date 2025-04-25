@@ -8,8 +8,32 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
+from django.conf import settings
 from datetime import timedelta
 import re
+import tensorflow as tf 
+import numpy as np 
+from PIL import Image
+import io 
+import os 
+
+physical_devices = tf.config.list_physical_devices('GPU')
+if physical_devices:
+    try:
+        tf.config.experimental.set_memory_growth(physical_devices[0], True)
+    except:
+        print("Failed to set memory growth.")
+
+MODEL_PATH = os.path.join('model', 'deepfake_model_final.h5')
+if not os.path.exists(MODEL_PATH):
+    print("Model path doesnot exists.")
+
+try:
+    model = tf.keras.models.load_model(MODEL_PATH)
+    print(f"Model: {model}")
+except Exception as e:
+    print(f"Error loading model: {e}")
+    model = None
 
 def home_view(request):
     if request.user.is_authenticated:
@@ -160,18 +184,32 @@ def logout_view(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def detect_api(request):
+    print("Detect_api called.")
     if request.method == 'POST':
-        image = request.FILES['image']
-        # Process image with model (placeholder)
-        result = {"result": "Real", "confidence": 0.95}
-        # Save to History
-        History.objects.create(
-            user=request.user,
-            image_name=image.name,
-            image=image,
-            result=f"{result['result']} (Confidence: {(result['confidence'] * 100):.2f}%)"
-        )
-        return JsonResponse(result)
+        print("Inside request.method.")
+        if model is not None:
+            print("Model not loaded.")
+            return JsonResponse({'error': 'Model not loaded.'}, status=500)
+        try:
+            print("Inside detect_api try block.")
+            image = request.FILES['image']
+            print(f"Image: {image}")
+            img = Image.open(image).resize((128,128)).convert('RGB')
+            img_array = np.array(img) / 127.5 - 1.0
+            img_array = np.expand_dims(img_array, axis=0)
+            prediction = model.predict(img_array)[0][0]
+            result = 'Real' if prediction < 0.5 else 'Fake'
+            confidence = 1 - prediction if prediction < 0.5 else prediction
+            History.objects.create(
+                user=request.user,
+                image_name=image.name,
+                image=image,
+                result=f"{result} (Confidence: {(confidence * 100):.2f}%)"
+            )
+            return JsonResponse({'result': result, 'confidence': float(confidence)})
+        except Exception as e:
+            print(f"Detection failed: {e}")
+            return JsonResponse({'error': f'Detection failed: {str(e)}'}, status=400) 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 @api_view(['POST'])

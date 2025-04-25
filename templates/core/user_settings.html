@@ -1,22 +1,32 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% block title %}User Settings{% endblock %}
+{% block extra_css %}
+<style>
+    button{
+        background-color: #5941F2 !important;
+        border: 2px solid #5941F2 !important;
+    }
+    
+</style>
+{% endblock extra_css %}
+
 {% block content %}
-<h2>User Settings</h2>
-<form method="POST" action="{% url 'settings' %}">
-    {% csrf_token %}
-    <div class="mb-3">
-        <label for="name" class="form-label">Name</label>
-        <input type="text" class="form-control" id="name" name="name" value="{{ user.profile.name }}">
-    </div>
-    <div class="mb-3">
-        <label for="email" class="form-label">Email</label>
-        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
-    </div>
-    <div class="mb-3">
-        <label for="password" class="form-label">New Password</label>
-        <input type="password" class="form-control" id="password" name="password">
-    </div>
-    <button type="submit" class="btn btn-primary">Update Profile</button>
-</form>
+    <h2>User Settings</h2>
+    <form method="POST" action="{% url 'settings' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ user.profile.name }}">
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">New Password</label>
+            <input type="password" class="form-control" id="password" name="password">
+        </div>
+        <button type="submit" class="btn btn-primary">Update Profile</button>
+    </form>
 {% endblock %}

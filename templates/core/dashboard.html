@@ -4,46 +4,178 @@
 {% block title %}DeepFake Detect{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<style>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+        .drop-zone {
+            width: 100%;
+            height: 350px;
+            border: 3px dashed #007bff;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .drop-zone.dragover {
+            background-color: #e9ecef;
+            border-color: #0056b3;
+            transform: scale(1.02);
+        }
+        .drop-zone:hover {
+            background-color: #e9ecef;
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.3);
+        }
+        .drop-zone img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            position: absolute;
+        }
+        #result {
+            margin-top: 20px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in;
+        }
+        .progress {
+            height: 25px;
+            margin-top: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #007bff, #00c4ff);
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #0056b3, #0096cc);
+        }
+        .list-group-item {
+            border: none;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            margin-bottom: 5px;
+            border-radius: 10px;
+        }
+        .footer {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            text-align: center;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</style>
 {% endblock %}
 {% block content %}
-<div class="container dashboard-container">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow-lg">
-                <div class="card-body p-4">
-                    <h2 class="card-title text-center mb-4">DeepFake Detect</h2>
-                    <div class="dropzone mb-4" id="dropzone">
-                        <div class="dropzone-content">
-                            <i class="fas fa-cloud-upload-alt fa-3x mb-2"></i>
-                            <p>Drag & Drop an Image or Click to Upload</p>
-                            <input type="file" id="image-upload" accept="image/*" class="d-none">
-                        </div>
-                        <img id="image-preview" class="img-fluid d-none" alt="Image Preview">
+<div class="container mt-5 mb-5">
+    <h1 class="text-center mb-2">Deepfake Detection</h1>
+    <p class="text-center text-muted mb-4">Upload an image to check if it’s real or a computer-made fake!</p>
+
+    <div class="row">
+        <!-- Main Detection Card -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-upload me-2"></i>Upload Your Image</h5>
+                    <p class="card-text text-muted">Drag an image here or click to select one for deepfake detection.</p>
+                    <div id="dropZone" class="drop-zone">
+                        <p><i class="fas fa-image fa-2x me-2"></i>Drag & Drop or Click to Upload</p>
                     </div>
-                    <div class="text-center mb-3">
-                        <button id="detect-btn" class="btn btn-gradient btn-lg">
-                            <i class="fas fa-search me-2"></i>Detect DeepFake
-                        </button>
-                    </div>
-                    <div id="loading-spinner" class="d-none text-center mb-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="result" class="result-container d-none">
-                        <h5>Result: <span id="result-text" class="badge"></span></h5>
-                        <div class="progress mt-2">
-                            <div id="confidence-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                    <div class="text-center">
-                        <button id="generate-pdf" class="btn btn-outline-gradient d-none">
-                            <i class="fas fa-file-pdf me-2"></i>Generate PDF Report
-                        </button>
+                    <input type="file" id="imageInput" accept="image/*" class="d-none">
+                    <button id="detectButton" class="btn btn-primary w-100 mt-3"><i class="fas fa-search me-2"></i>Detect Deepfake</button>
+                    <div id="result"></div>
+                    <div class="progress">
+                        <div id="progressBarInner" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Instructions Card -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-list-ol me-2"></i>How to Use</h5>
+                    <ol class="list-group list-group-numbered">
+                        <li class="list-group-item"><strong>Upload an Image</strong>: Drag a photo into the box or click to choose one from your computer.</li>
+                        <li class="list-group-item"><strong>Click Detect</strong>: Press the “Detect Deepfake” button to check if the image is real or fake.</li>
+                        <li class="list-group-item"><strong>View Results</strong>: See the result (Real or Fake) with a confidence score, like “90% Fake”.</li>
+                        <li class="list-group-item"><strong>Check History</strong>: Go to the History page to see all your past checks.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Tips Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-lightbulb me-2"></i>Tips for Best Results</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item"><i class="fas fa-check-circle me-2"></i>Use clear, well-lit photos of faces for accurate detection.</li>
+                        <li class="list-group-item"><i class="fas fa-check-circle me-2"></i>Choose JPEG or PNG images (avoid blurry or low-quality ones).</li>
+                        <li class="list-group-item"><i class="fas fa-check-circle me-2"></i>Ensure the face is centered and takes up most of the image.</li>
+                        <li class="list-group-item"><i class="fas fa-check-circle me-2"></i>Test images similar to those in our dataset (e.g., portrait-style photos).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-info-circle me-2"></i>About This Tool</h5>
+                    <p class="card-text">This website uses a smart computer program to spot deepfakes—fake images made by computers to look real. Upload any photo, and our tool will tell you if it’s genuine or not, with a confidence score to show how sure it is. Perfect for checking social media images or news photos!</p>
+                    <p class="card-text text-muted">Built with cutting-edge AI, this tool is fast and easy to use, even for beginners.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Card -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+                    <div id="recentActivity">
+                        <p class="text-muted">No recent detections yet. Upload an image to see your results here!</p>
+                    </div>
+                    <a href="{% url 'history' %}" class="btn btn-outline-primary mt-3"><i class="fas fa-clock me-2"></i>View Full History</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p class="mb-0">Deepfake Detection © 2025 | Powered by AI to Keep Images Real</p>
     </div>
 </div>
 {% endblock %}
