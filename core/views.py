@@ -263,7 +263,7 @@ def settings_view(request):
 
 def logout_view(request):
     logout(request)
-    return redirect('login')
+    return redirect('home')
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
