@@ -3,227 +3,447 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Agent - Your Intelligent Assistant</title>
+    <title>DeepTrace - Deep Fake Image Detection</title>
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        .animate-intro {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 1s ease-out forwards;
+        :root {
+            --primary-purple: #5941F2;
+            --white: #FFFFFF;
+            --light-gray: #F5F5F5;
+            --dark-gray: #333333;
+            --accent: #FF4081;
         }
-        .animate-cta:hover {
-            transform: scale(1.05);
-            transition: transform 0.3s ease;
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--white);
+            color: var(--dark-gray);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
         }
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        .navbar {
+            background: var(--primary-purple);
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-        .section-padding {
-            padding: 5rem 0;
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.8rem;
+            color: var(--white) !important;
         }
-        .feature-icon {
-            font-size: 3rem;
-            display: block;
+
+        .nav-link {
+            color: var(--white) !important;
+            font-weight: 400;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--accent) !important;
+        }
+
+        .hero-section {
+            position: relative;
+            height: 80vh;
+            background: linear-gradient(rgba(89, 65, 242, 0.7), rgba(63, 45, 176, 0.7)), url('https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+            color: var(--white);
+            padding: 100px 0;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2rem;
+            border-radius: 10px;
+        }
+
+        .hero-section h1 {
+            font-weight: 700;
+            font-size: 2.5rem;
             margin-bottom: 1rem;
         }
-        #header {
-            background-color: #5941F2 !important;
+
+        .feature-card {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            text-align: center;
+            color: var(--dark-gray);
+            border: 1px solid var(--primary-purple);
         }
-        #cta, #pricing1, #pricing2, #pricing3 {
-            background-color: #5941F2 !important;
-            border: 2px solid #5941F2;
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-card i {
+            font-size: 2.5rem;
+            color: var(--primary-purple);
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--primary-purple);
+        }
+
+        .pricing-card {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            text-align: center;
+            color: var(--dark-gray);
+            position: relative;
+            border: 1px solid var(--primary-purple);
+        }
+
+        .pricing-card:hover {
+            transform: scale(1.03);
+        }
+
+        .pricing-card i {
+            font-size: 2rem;
+            color: var(--primary-purple);
+            margin-bottom: 1rem;
+        }
+
+        .pricing-card .badge {
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            background: var(--accent);
+            color: var(--white);
+            font-size: 0.8rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 15px;
+        }
+
+        .faq-item {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark-gray);
+            border: 1px solid var(--primary-purple);
+        }
+
+        .faq-item i {
+            font-size: 1.2rem;
+            color: var(--primary-purple);
+            margin-right: 0.5rem;
+        }
+
+        footer {
+            background: var(--primary-purple);
+            color: var(--white);
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        footer i {
+            font-size: 1.5rem;
+            margin: 0 1rem;
+            transition: color 0.3s;
+        }
+
+        footer i:hover {
+            color: var(--accent);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-purple);
+            border: none;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent);
+        }
+
+        .section-bg-light {
+            background: var(--light-gray);
+            color: var(--dark-gray);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .hero-section {
+                height: 60vh;
+                padding: 60px 0;
+            }
+
+            .hero-section h1 {
+                font-size: 1.8rem;
+            }
+
+            .hero-content {
+                padding: 1.5rem;
+            }
+
+            .feature-card, .pricing-card {
+                margin-bottom: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="bg-primary text-white py-4" id="header">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">DeepFake Detection</h1>
-                <nav>
-                    <a href="#features" class="text-white mx-3 text-decoration-none">Features</a>
-                    <a href="#about" class="text-white mx-3 text-decoration-none">About</a>
-                    <a href="#pricing" class="text-white mx-3 text-decoration-none">Pricing</a>
-                    <a href="#faq" class="text-white mx-3 text-decoration-none">FAQ</a>
-                    <a href="#contact" class="text-white mx-3 text-decoration-none">Contact</a>
-                </nav>
+            <a class="navbar-brand" href="#"><i class="bi bi-shield-check me-2"></i>DeepTrace</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#about"><i class="bi bi-info-circle me-1"></i>About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#how-to-use"><i class="bi bi-gear me-1"></i>How It Works</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#pricing"><i class="bi bi-wallet me-1"></i>Pricing</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq"><i class="bi bi-question-circle me-1"></i>FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-light ms-2" href="/login"><i class="bi bi-rocket-takeoff me-1"></i>Try Now</a></li>
+                </ul>
             </div>
         </div>
-    </header>
+    </nav>
 
-    <!-- Hero -->
-    <section class="bg-light section-padding text-center">
+    <!-- Hero Section -->
+    <section class="hero-section">
         <div class="container">
-            <h2 class="display-4 fw-bold mb-4 animate-intro">Detect the Fake. Trust the Real.</h2>
-            <p class="lead mb-5 animate-intro" style="animation-delay: 0.2s;">
-                Our AI-powered system instantly analyzes images to detect deepfakes and synthetic content—helping you separate fact from fiction with confidence.
+            <div class="hero-content">
+                <h1 data-aos="fade-up"><i class="bi bi-camera me-2"></i>Detect Deep Fake Images with DeepTrace</h1>
+                <p data-aos="fade-up" data-aos-delay="100">Uncover manipulated images with our advanced AI-powered detection technology.</p>
+                <a href="/login" class="btn btn-light mt-3" data-aos="fade-up" data-aos-delay="200"><i class="bi bi-arrow-down-circle me-2"></i>Try Now</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-5 section-bg-light">
+        <div class="container">
+            <h2 class="text-center mb-4" data-aos="fade-up"><i class="bi bi-people me-2"></i>About Us</h2>
+            <p class="text-center lead" data-aos="fade-up" data-aos-delay="100">
+                DeepTrace is your trusted partner in fighting digital deception. We specialize in detecting deep fake images, ensuring authenticity with cutting-edge AI technology.
             </p>
-            <a href="/login" class="btn btn-primary btn-lg animate-cta" id="cta">Try Now</a>
-        </div>
-    </section>
-
-    <!-- Features -->
-    <section id="features" class="section-padding">
-        <div class="container">
-            <h2 class="text-center fw-bold mb-5">How It Works</h2>
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 text-center p-4">
-                        <span class="feature-icon">📷</span>
-                        <h3 class="h5 fw-bold">Input the Image</h3>
-                        <p>Start by uploading the image in question.</p>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="chart-container" data-aos="fade-right">
+                        <canvas id="accuracyChart"></canvas>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 text-center p-4">
-                        <span class="feature-icon">🔍</span>
-                        <h3 class="h5 fw-bold">Run Detection</h3>
-                        <p>The system processes and delivers a real vs AI verdict.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 text-center p-4">
-                        <span class="feature-icon">💾</span>
-                        <h3 class="h5 fw-bold">Store & Report</h3>
-                        <p>Results are saved and exported as a professional PDF.</p>
+                <div class="col-md-6">
+                    <div class="chart-container" data-aos="fade-left">
+                        <canvas id="performanceChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- About Us -->
-    <section id="about" class="bg-light section-padding">
+    <!-- How to Use Section -->
+    <section id="how-to-use" class="py-5">
         <div class="container">
-            <h2 class="text-center fw-bold mb-5">About Us</h2>
+            <h2 class="text-center mb-4" data-aos="fade-up"><i class="bi bi-gear-fill me-2"></i>How It Works</h2>
             <div class="row">
-                <div class="col-md-4 mb-4">
-                    <h3 class="h5 fw-bold">Project Background</h3>
-                    <p>
-                        In a world where synthetic media is rapidly advancing, the line between real and AI-generated content is becoming harder to see. Our project was born out of the urgent need to combat misinformation and ensure authenticity in digital imagery. Leveraging state-of-the-art deep learning models, we developed a system that helps individuals and organizations quickly detect deepfakes with confidence and clarity.
-                    </p>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <h3 class="h5 fw-bold">Our Mission</h3>
-                    <p>
-                        Our mission is simple: defend truth in the digital age. We aim to empower users with reliable tools to identify AI-generated content, combat the spread of disinformation, and foster a more trustworthy media ecosystem. We believe in using AI not just to create—but to protect.
-
-
-                    </p>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <h3 class="h5 fw-bold">Our Team</h3>
-                    <p>
-                        We're a passionate team of AI researchers, engineers, and truth-seekers united by a common goal: making the internet a more transparent place. With backgrounds in computer vision, cybersecurity, and ethics in AI, we bring a multidisciplinary approach to tackling one of today's most pressing tech challenges. Together, we’re building solutions that matter.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Pricing -->
-    <section id="pricing" class="section-padding">
-        <div class="container">
-            <h2 class="text-center fw-bold mb-5">Transparent Pricing for Every Need
-
-            </h2>
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 text-center p-4">
-                        <h3 class="h5 fw-bold mb-3">Starter</h3>
-                        <p class="display-6 fw-bold mb-4">$9/mo</p>
-                        <ul class="list-unstyled mb-4">
-                            <li class="mb-2">For individuals & light users</li>
-                            <li class="mb-2">Email Support</li>
-                            <li class="mb-2">5GB Storage</li>
-                        </ul>
-                        <a href="#" class="btn btn-primary animate-cta" id="pricing1">Choose Plan</a>
+                <div class="col-md-4">
+                    <div class="feature-card" data-aos="zoom-in">
+                        <i class="bi bi-upload"></i>
+                        <h4>1. Upload Image</h4>
+                        <p>Upload the image you suspect might be manipulated.</p>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 text-center p-4">
-                        <h3 class="h5 fw-bold mb-3">Pro</h3>
-                        <p class="display-6 fw-bold mb-4">$29/mo</p>
-                        <ul class="list-unstyled mb-4">
-                            <li class="mb-2">For regular users & small teams</li>
-                            <li class="mb-2">Priority Support</li>
-                            <li class="mb-2">50GB Storage</li>
-                        </ul>
-                        <a href="#" class="btn btn-primary animate-cta" id="pricing2">Choose Plan</a>
+                <div class="col-md-4">
+                    <div class="feature-card" data-aos="zoom-in" data-aos-delay="100">
+                        <i class="bi bi-cpu"></i>
+                        <h4>2. System Processing</h4>
+                        <p>Our AI algorithms scan the image for signs of deep fake alterations.</p>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 text-center p-4">
-                        <h3 class="h5 fw-bold mb-3">Enterprise</h3>
-                        <p class="display-6 fw-bold mb-4">Contact Us</p>
-                        <ul class="list-unstyled mb-4">
-                            <li class="mb-2">For organizations & heavy-duty use</li>
-                            <li class="mb-2">Dedicated Support</li>
-                            <li class="mb-2">Unlimited Storage</li>
-                        </ul>
-                        <a href="#" class="btn btn-primary animate-cta" id="pricing3">Choose Plan</a>
+                <div class="col-md-4">
+                    <div class="feature-card" data-aos="zoom-in" data-aos-delay="200">
+                        <i class="bi bi-clipboard-data"></i>
+                        <h4>3. View Results</h4>
+                        <p>Get a comprehensive report on the image's authenticity.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- FAQ -->
-    <section id="faq" class="bg-light section-padding">
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-5 section-bg-light">
         <div class="container">
-            <h2 class="text-center fw-bold mb-5">Frequently Asked Questions</h2>
-            <div class="accordion" id="faqAccordion">
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="heading0">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse0" aria-expanded="false" aria-controls="collapse0">
-                            How does AI Agent handle deepfakes?
-                        </button>
-                    </h2>
-                    <div id="collapse0" class="accordion-collapse collapse" aria-labelledby="heading0" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            We prioritize ethical AI use and implement strict protocols to detect and prevent deepfake-related misuse, ensuring our platform remains trustworthy.
-                        </div>
+            <h2 class="text-center mb-4" data-aos="fade-up"><i class="bi bi-wallet2 me-2"></i>Pricing</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="pricing-card" data-aos="flip-left">
+                        <i class="bi bi-person"></i>
+                        <h4>Basic</h4>
+                        <p class="h2">$0</p>
+                        <p>5 scans/month</p>
+                        <p>Basic analysis</p>
+                        <a href="#" class="btn btn-primary">Choose Plan</a>
+                        <span class="badge">Free</span>
                     </div>
                 </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="heading1">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
-                            What makes your AI technology unique?
-                        </button>
-                    </h2>
-                    <div id="collapse1" class="accordion-collapse collapse" aria-labelledby="heading1" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            Our AI combines advanced machine learning with user-centric design, offering personalized automation and insights tailored to your needs.
-                        </div>
+                <div class="col-md-4">
+                    <div class="pricing-card" data-aos="flip-left" data-aos-delay="100">
+                        <i class="bi bi-star"></i>
+                        <h4>Pro</h4>
+                        <p class="h2">$19</p>
+                        <p>50 scans/month</p>
+                        <p>Advanced analysis</p>
+                        <a href="#" class="btn btn-primary">Choose Plan</a>
+                        <span class="badge">Popular</span>
                     </div>
                 </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="heading2">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
-                            Is AI Agent safe to use?
-                        </button>
-                    </h2>
-                    <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="heading2" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            Yes, we use robust encryption, regular audits, and compliance with global data protection standards to ensure your data and interactions are secure.
-                        </div>
+                <div class="col-md-4">
+                    <div class="pricing-card" data-aos="flip-left" data-aos-delay="200">
+                        <i class="bi bi-building"></i>
+                        <h4>Enterprise</h4>
+                        <p class="h2">Custom</p>
+                        <p>Unlimited scans</p>
+                        <p>Full API access</p>
+                        <a href="#" class="btn btn-primary">Contact Us</a>
+                        <span class="badge">Premium</span>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-4" data-aos="fade-up"><i class="bi bi-question-circle-fill me-2"></i>Frequently Asked Questions</h2>
+            <div class="faq-item" data-aos="fade-up" data-aos-delay="100">
+                <h5><i class="bi bi-info-circle"></i>What is a deep fake image?</h5>
+                <p>A deep fake image is a synthetic image created or manipulated using AI to appear realistic.</p>
+            </div>
+            <div class="faq-item" data-aos="fade-up" data-aos-delay="200">
+                <h5><i class="bi bi-check-circle"></i>How accurate is DeepTrace?</h5>
+                <p>Our system achieves over 95% accuracy in detecting deep fake images, backed by rigorous testing.</p>
+            </div>
+            <div class="faq-item" data-aos="fade-up" data-aos-delay="300">
+                <h5><i class="bi bi-phone"></i>Can I use DeepTrace on mobile?</h5>
+                <p>Yes, DeepTrace is fully responsive and works seamlessly on mobile devices.</p>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer id="contact" class="bg-dark text-white py-5">
-        <div class="container text-center">
-            <p class="mb-3">Contact us: raja.zeeshan3735@gmail.com</p>
+    <footer>
+        <div class="container">
             <p>© 2025 DeepFake Detection. All rights reserved.</p>
+            <div>
+                <a href="#" class="text-white"><i class="bi bi-twitter"></i></a>
+                <a href="#" class="text-white"><i class="bi bi-facebook"></i></a>
+                <a href="#" class="text-white"><i class="bi bi-linkedin"></i></a>
+            </div>
         </div>
     </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- AOS Animation Library -->
+    <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+    <script>
+        // Initialize AOS
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof AOS !== 'undefined') {
+                AOS.init({
+                    duration: 800,
+                    once: true
+                });
+            }
+        });
+
+        // Chart.js - Accuracy Chart
+        if (document.getElementById('accuracyChart')) {
+            const ctx1 = document.getElementById('accuracyChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['Images'],
+                    datasets: [{
+                        label: 'Detection Accuracy (%)',
+                        data: [95],
+                        backgroundColor: 'rgba(89, 65, 242, 0.5)',
+                        borderColor: 'rgba(89, 65, 242, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                        },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'top', labels: { color: 'rgba(51, 51, 51, 1)' } }
+                    }
+                }
+            });
+        }
+
+        // Chart.js - Performance Chart
+        if (document.getElementById('performanceChart')) {
+            const ctx2 = document.getElementById('performanceChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr'],
+                    datasets: [{
+                        label: 'Processing Speed (ms)',
+                        data: [200, 180, 150, 120],
+                        fill: true,
+                        backgroundColor: 'rgba(89, 65, 242, 0.2)',
+                        borderColor: 'rgba(89, 65, 242, 1)',
+                        tension: 0.4,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                        },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'top', labels: { color: 'rgba(51, 51, 51, 1)' } }
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>

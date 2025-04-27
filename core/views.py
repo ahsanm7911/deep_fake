@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Avg
+from django.db.models import Count, Avg, Q
 from rest_framework.response import Response
 from django.conf import settings
 from datetime import timedelta
@@ -105,60 +105,74 @@ def signup_view(request):
                 messages.error(request, f"Error creating account: {str(e)}")
     return render(request, 'core/signup.html')
 
-@login_required
+
 def analytics_page(request):
-    user = request.user
-    detections = History.objects.filter(user=user)
+    # Basic counts
+    total_detections = History.objects.count()
+    real_count = History.objects.filter(result='Real').count()
+    fake_count = History.objects.filter(result='Fake').count()
     
-    # Real/Fake distribution
-    result_counts = detections.values('result').annotate(count=Count('id'))
-    real_count = next((item['count'] for item in result_counts if item['result'] == 'Real'), 0)
-    fake_count = next((item['count'] for item in result_counts if item['result'] == 'Fake'), 0)
+    # Percentages
+    real_percentage = round((real_count / total_detections) * 100, 2) if total_detections > 0 else 0
+    fake_percentage = round((fake_count / total_detections) * 100, 2) if total_detections > 0 else 0
     
     # Average confidence
-    avg_confidence = detections.aggregate(Avg('confidence'))['confidence__avg'] or 0
+    avg_confidence = round(History.objects.aggregate(avg=Avg('confidence'))['avg'] or 0, 2)
     
-    # Image size stats
-    avg_image_width = detections.aggregate(Avg('image_width'))['image_width__avg'] or 0
-    avg_image_height = detections.aggregate(Avg('image_height'))['image_height__avg'] or 0
-    
-    # Time-series data (last 30 days)
+    # Last 30 days data for line chart
     thirty_days_ago = timezone.now() - timedelta(days=30)
-    recent_detections = detections.filter(timestamp__gte=thirty_days_ago).order_by('timestamp')
+    daily_counts = History.objects.filter(timestamp__gte=thirty_days_ago).extra(
+        {'date': "date(timestamp)"}
+    ).values('date').annotate(
+        real=Count('id', filter=Q(result='Real')),
+        fake=Count('id', filter=Q(result='Fake')))
     
-    # Confidence trends
-    confidence_data = [
-        {'timestamp': d.timestamp.strftime('%Y-%m-%d'), 'confidence': d.confidence}
-        for d in recent_detections
+    date_labels = []
+    real_daily_counts = []
+    fake_daily_counts = []
+    
+    for day in range(30):
+        date = (timezone.now() - timedelta(days=29 - day)).date()
+        date_labels.append(date.strftime('%b %d'))
+        count = next((item for item in daily_counts if item['date'] == date), {'real': 0, 'fake': 0})
+        real_daily_counts.append(count['real'])
+        fake_daily_counts.append(count['fake'])
+    
+    # Confidence distribution (histogram)
+    confidence_distribution = [0] * 10
+    for item in History.objects.all():
+        bucket = min(int(item.confidence / 10), 9)
+        confidence_distribution[bucket] += 1
+    
+    # Image sizes for scatter plot
+    real_image_sizes = [
+        {'x': item.image_width, 'y': item.image_height} 
+        for item in History.objects.filter(result='Real').exclude(image_width__isnull=True).exclude(image_height__isnull=True)
+    ]
+    fake_image_sizes = [
+        {'x': item.image_width, 'y': item.image_height} 
+        for item in History.objects.filter(result='Fake').exclude(image_width__isnull=True).exclude(image_height__isnull=True)
     ]
     
-    # Detections per day
-    detections_by_day = (
-        detections.filter(timestamp__gte=thirty_days_ago)
-        .extra({'day': "date(timestamp)"})
-        .values('day')
-        .annotate(count=Count('id'))
-        .order_by('day')
-    )
-    detections_per_day = [
-        {'date': item['day'], 'count': item['count']}
-        for item in detections_by_day
-    ]
-    
-    # Recent detections for table
-    recent_detections_table = detections[:5]
+    # Recent detections
+    recent_detections = History.objects.order_by('-timestamp')[:10]
     
     context = {
+        'total_detections': total_detections,
         'real_count': real_count,
         'fake_count': fake_count,
-        'total_detections': real_count + fake_count,
-        'avg_confidence': round(avg_confidence * 100, 2),
-        'avg_image_width': round(avg_image_width, 0),
-        'avg_image_height': round(avg_image_height, 0),
-        'confidence_data': confidence_data,
-        'detections_per_day': detections_per_day,
-        'recent_detections': recent_detections_table,
+        'real_percentage': real_percentage,
+        'fake_percentage': fake_percentage,
+        'avg_confidence': avg_confidence,
+        'date_labels': date_labels,
+        'real_daily_counts': real_daily_counts,
+        'fake_daily_counts': fake_daily_counts,
+        'confidence_distribution': confidence_distribution,
+        'real_image_sizes': real_image_sizes,
+        'fake_image_sizes': fake_image_sizes,
+        'recent_detections': recent_detections,
     }
+    
     return render(request, 'core/analytics.html', context)
 
 @api_view(['GET'])

@@ -70,14 +70,14 @@
                                    <tbody id="historyBody">
                                     {% for record in history%}
                                         <tr>
-                                            <th>{{ record.image_url }}</th>
+                                            <!-- <th>{{ record.image_url }}</th> -->
+                                            <th><a href="{{ record.image_url }}" class="btn btn-outline-primary"/>View Image</th>
                                             <th>{{ record.result }}</th>
                                             <th>{{ record.confidence }}</th>
                                             <th>{{ record.timestamp }}</th>
                                             <th>{{ record.image_name }}</th>
                                             <th>{{ record.image_width }} x {{ record.image_height}}</th>
-                                            <th>{{ record.timestamp }}</th>
-                                            <th>{{ record.pdf_report_url }}</th>
+                                            <th><a href="{{ record.pdf_report_url }}" class="btn btn-primary"/>View Report</th>
                                         </tr>
                                     {% endfor %}
                                    </tbody>
