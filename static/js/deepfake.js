@@ -132,12 +132,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('API error:', data.error);
                 return;
             }
-
+            
             const result = data.result;
             const confidence = (data.confidence * 100).toFixed(2);
-            const badgeClass = result === 'Real' ? 'bg-success' : 'bg-danger';
+            const badgeClass = result === 'Real' ? 'alert-success' : 'alert-danger';
 
+            let resultChild = document.createElement('div')
+            let confidenceDiv = document.createElement('div')
+            resultDiv.classList.add('d-flex', 'flex-row', 'align-items-center', 'justify-content-center')
+            resultChild.classList.add('me-2', 'alert', badgeClass, 'p-2')
+            confidenceDiv.classList.add('alert', badgeClass, 'p-2')
+            resultChild.textContent = "Result: " + result
+            confidenceDiv.textContent = "Confidence: " + confidence
+            resultDiv.appendChild(resultChild)
+            resultDiv.appendChild(confidenceDiv)
             // Update result with existing HTML from dashboard.html
+            if(resultDiv.contains(resultText)){
+                console.log("Result text is in result div")
+            } else {
+                console.log("Result text is not in result div")
+            }
             resultDiv.classList.remove('d-none');
             if (resultText) {
                 resultText.textContent = result;
