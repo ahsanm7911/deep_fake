@@ -307,22 +307,23 @@ def detect_api(request):
             c.drawString(1 * inch, height - 1.5 * inch, f"User: {request.user.profile.name}")
             c.drawString(1 * inch, height - 1.75 * inch, f"Email: {request.user.email}")
             c.drawString(1 * inch, height - 2 * inch, f"Date: {history.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+            
 
             # Image
             if os.path.exists(image_full_path):
                 img_reader = ImageReader(image_full_path)
                 img_width, img_height = 200, 200
-                c.drawImage(img_reader, 1 * inch, height - 4.5 * inch, width=img_width, height=img_height)
+                c.drawImage(img_reader, 1 * inch, height - 5.5 * inch, width=img_width, height=img_height)
             else:
                 c.drawString(1 * inch, height - 4.5 * inch, "Image not found")
 
             # Image Information
-            c.drawString(1 * inch, height - 5 * inch, f"Image Name: {image_name}")
-            c.drawString(1 * inch, height - 5.25 * inch, f"Dimensions: {img.width} x {img.height} pixels")
+            c.drawString(1 * inch, height - 6.5 * inch, f"Image Name: {image_name}")
+            c.drawString(1 * inch, height - 6.75 * inch, f"Dimensions: {img.width} x {img.height} pixels")
 
             # Detection Results
-            c.drawString(1 * inch, height - 5.75 * inch, f"Result: {result}")
-            c.drawString(1 * inch, height - 6 * inch, f"Confidence: {float(confidence):.2%}")
+            c.drawString(1 * inch, height - 7 * inch, f"Result: {result}")
+            c.drawString(1 * inch, height - 7.25 * inch, f"Confidence: {float(confidence):.2%}")
 
             # Finalize PDF
             c.showPage()
@@ -383,8 +384,8 @@ def generate_pdf(request):
         # User Information
         c.setFont("Helvetica", 12)
         c.drawString(1 * inch, height - 1.5 * inch, f"User: {request.user.username}")
-        c.drawString(1 * inch, height - 1.75 * inch, f"Email: {request.user.email}")
-        c.drawString(1 * inch, height - 2 * inch, f"Date: {history.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+        c.drawString(1 * inch, height - 1.75 * inch, f"Email: {request.user.email}<br/>")
+        c.drawString(1 * inch, height - 4 * inch, f"Date: {history.timestamp.strftime('%Y-%m-%d %H:%M:%S')}<br/><br/>")
 
         # Image
         image_path = os.path.join(settings.MEDIA_ROOT, history.image.name)
