@@ -8,6 +8,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count, Avg
+from rest_framework.response import Response
 from django.conf import settings
 from datetime import timedelta
 import re
@@ -102,80 +105,122 @@ def signup_view(request):
                 messages.error(request, f"Error creating account: {str(e)}")
     return render(request, 'core/signup.html')
 
-def analytics_view(request):
-    return render(request, 'core/analytics.html')
+@login_required
+def analytics_page(request):
+    user = request.user
+    detections = History.objects.filter(user=user)
+    
+    # Real/Fake distribution
+    result_counts = detections.values('result').annotate(count=Count('id'))
+    real_count = next((item['count'] for item in result_counts if item['result'] == 'Real'), 0)
+    fake_count = next((item['count'] for item in result_counts if item['result'] == 'Fake'), 0)
+    
+    # Average confidence
+    avg_confidence = detections.aggregate(Avg('confidence'))['confidence__avg'] or 0
+    
+    # Image size stats
+    avg_image_width = detections.aggregate(Avg('image_width'))['image_width__avg'] or 0
+    avg_image_height = detections.aggregate(Avg('image_height'))['image_height__avg'] or 0
+    
+    # Time-series data (last 30 days)
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    recent_detections = detections.filter(timestamp__gte=thirty_days_ago).order_by('timestamp')
+    
+    # Confidence trends
+    confidence_data = [
+        {'timestamp': d.timestamp.strftime('%Y-%m-%d'), 'confidence': d.confidence}
+        for d in recent_detections
+    ]
+    
+    # Detections per day
+    detections_by_day = (
+        detections.filter(timestamp__gte=thirty_days_ago)
+        .extra({'day': "date(timestamp)"})
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+    detections_per_day = [
+        {'date': item['day'], 'count': item['count']}
+        for item in detections_by_day
+    ]
+    
+    # Recent detections for table
+    recent_detections_table = detections[:5]
+    
+    context = {
+        'real_count': real_count,
+        'fake_count': fake_count,
+        'total_detections': real_count + fake_count,
+        'avg_confidence': round(avg_confidence * 100, 2),
+        'avg_image_width': round(avg_image_width, 0),
+        'avg_image_height': round(avg_image_height, 0),
+        'confidence_data': confidence_data,
+        'detections_per_day': detections_per_day,
+        'recent_detections': recent_detections_table,
+    }
+    return render(request, 'core/analytics.html', context)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def analytics_api(request):
-    history = History.objects.filter(user=request.user)
-    total_scans = history.count()
+    user = request.user
+    detections = History.objects.filter(user=user)
     
-    fake_count = history.filter(result__contains='Fake').count()
-    real_count = total_scans - fake_count
-    fake_percentage = (fake_count / total_scans * 100) if total_scans > 0 else 0
-    real_percentage = (real_count / total_scans * 100) if total_scans > 0 else 0
-
-    # Trend data (last 30 days)
-    end_date = timezone.now()
-    start_date = end_date - timedelta(days=30)
-    trend_data = []
-    trend_labels = []
-    for i in range(30):
-        day = start_date + timedelta(days=i)
-        count = history.filter(date__date=day.date()).count()
-        trend_data.append(count)
-        trend_labels.append(day.strftime('%Y-%m-%d'))
-
-    # Confidence score distribution
-    confidence_bins = [f"{i}-{i+10}" for i in range(0, 100, 10)]
-    real_confidence = [0] * 10
-    fake_confidence = [0] * 10
-    for record in history:
-        match = re.search(r'Confidence: (\d+\.\d{2})', record.result)
-        if match:
-            confidence = float(match.group(1))
-            bin_index = min(int(confidence // 10), 9)
-            if 'Real' in record.result:
-                real_confidence[bin_index] += 1
-            else:
-                fake_confidence[bin_index] += 1
-
-    return JsonResponse({
-        'total_scans': total_scans,
-        'fake_percentage': round(fake_percentage, 2),
-        'real_percentage': round(real_percentage, 2),
-        'trend_labels': trend_labels,
-        'trend_data': trend_data,
-        'confidence_bins': confidence_bins,
-        'real_confidence': real_confidence,
-        'fake_confidence': fake_confidence
+    result_counts = detections.values('result').annotate(count=Count('id'))
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    recent_detections = detections.filter(timestamp__gte=thirty_days_ago).order_by('timestamp')
+    
+    detections_by_day = (
+        detections.filter(timestamp__gte=thirty_days_ago)
+        .extra({'day': "date(timestamp)"})
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+    
+    return Response({
+        'result_counts': list(result_counts),
+        'confidence_data': [
+            {'timestamp': d.timestamp.strftime('%Y-%m-%d'), 'confidence': d.confidence}
+            for d in recent_detections
+        ],
+        'detections_per_day': [
+            {'date': item['day'], 'count': item['count']}
+            for item in detections_by_day
+        ],
+        'avg_confidence': detections.aggregate(Avg('confidence'))['confidence__avg'] or 0,
+        'avg_image_width': detections.aggregate(Avg('image_width'))['image_width__avg'] or 0,
+        'avg_image_height': detections.aggregate(Avg('image_height'))['image_height__avg'] or 0,
     })
 
 def dashboard_view(request):
     return render(request, 'core/dashboard.html')
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
+# @api_view(['GET'])
+# # @permission_classes([IsAuthenticated])
 def history_view(request):
-    try:
-        history_records = History.objects.filter(user=request.user).order_by('-timestamp')
-        history_data = [{
-            'id': record.id,
-            'image_url': record.image.url if record.image else None,
-            'result': record.result,
-            'confidence': float(record.confidence),
-            'timestamp': record.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            'image_name': record.image_name,
-            'image_width': record.image_width,
-            'image_height': record.image_height,
-            'pdf_report_url': record.pdf_report.url if record.pdf_report else None
-        } for record in history_records]
-        return JsonResponse({'history': history_data})
-    except Exception as e:
-        print(f"History view error: {e}")
-        return JsonResponse({'error': str(e)}, status=500)
+    
+    history_records = History.objects.filter(user=request.user).order_by('-timestamp')
+    history_data = [{
+        'id': record.id,
+        'image_url': record.image.url if record.image else None,
+        'result': record.result,
+        'confidence': float(record.confidence),
+        'timestamp': record.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+        'image_name': record.image_name,
+        'image_width': record.image_width,
+        'image_height': record.image_height,
+        'pdf_report_url': record.pdf_report.url if record.pdf_report else None
+    } for record in history_records]
+    context = {
+        'history': history_data
+    }
+    return render(request, 'core/history.html', context)
+    
+    
+    
 
 def settings_view(request):
     if request.method == 'POST':

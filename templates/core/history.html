@@ -1,4 +1,4 @@
-{% extends 'corebase.html' %}
+{% extends 'core/base.html' %}
    {% load static %}
 
    {% block title %}Detection History{% endblock %}
@@ -67,10 +67,22 @@
                                            <th>PDF Report</th>
                                        </tr>
                                    </thead>
-                                   <tbody id="historyBody"></tbody>
+                                   <tbody id="historyBody">
+                                    {% for record in history%}
+                                        <tr>
+                                            <th>{{ record.image_url }}</th>
+                                            <th>{{ record.result }}</th>
+                                            <th>{{ record.confidence }}</th>
+                                            <th>{{ record.timestamp }}</th>
+                                            <th>{{ record.image_name }}</th>
+                                            <th>{{ record.image_width }} x {{ record.image_height}}</th>
+                                            <th>{{ record.timestamp }}</th>
+                                            <th>{{ record.pdf_report_url }}</th>
+                                        </tr>
+                                    {% endfor %}
+                                   </tbody>
                                </table>
                            </div>
-                           <div id="noHistory" class="alert alert-info d-none">No detection history found.</div>
                        </div>
                    </div>
                </div>
@@ -79,41 +91,4 @@
    {% endblock %}
 
    {% block extra_js %}
-       <script>
-           document.addEventListener("DOMContentLoaded", async () => {
-               try {
-                   const response = await fetch("/api/history", {
-                       method: "GET",
-                       headers: {
-                           "Authorization": "Bearer " + localStorage.getItem("token"),
-                       },
-                   });
-                   const data = await response.json();
-
-                   const historyBody = document.getElementById("historyBody");
-                   const noHistory = document.getElementById("noHistory");
-
-                   if (data.history && data.history.length > 0) {
-                       data.history.forEach(record => {
-                           const row = document.createElement("tr");
-                           row.innerHTML = `
-                               <td><img src="${record.image_url || ''}" class="history-image" alt="${record.image_name || 'No image'}"></td>
-                               <td>${record.result}</td>
-                               <td>${(record.confidence * 100).toFixed(2)}%</td>
-                               <td>${record.timestamp}</td>
-                               <td>${record.image_name || 'N/A'}</td>
-                               <td>${record.image_width || 'N/A'} x ${record.image_height || 'N/A'}</td>
-                               <td>${record.pdf_report_url ? `<a href="${record.pdf_report_url}" class="btn btn-pdf" target="_blank"><i class="bi bi-file-earmark-pdf me-1"></i>Download</a>` : 'N/A'}</td>
-                           `;
-                           historyBody.appendChild(row);
-                       });
-                   } else {
-                       noHistory.classList.remove("d-none");
-                   }
-               } catch (error) {
-                   console.error("History fetch error:", error);
-                   alert("Failed to load history.");
-               }
-           });
-       </script>
    {% endblock %}

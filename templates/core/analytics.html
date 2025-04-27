@@ -2,39 +2,200 @@
 {% load static %}
 {% block title %}Analytics{% endblock %}
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <style>
-    .chart-container {
-        max-width: 600px;
-        margin: 20px auto;
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        font-family: 'Arial', sans-serif;
     }
-    .card {
-        margin-bottom: 20px;
+    .analytics-container {
+        padding: 2rem;
+    }
+    .analytics-card {
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        animation: fadeIn 0.5s ease-in;
+    }
+    .analytics-card h3 {
+        color: #333;
+        margin-bottom: 1rem;
+    }
+    .stat-card {
+        background: linear-gradient(45deg, #5941F2, #00c4ff);
+        color: #fff;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    .stat-card i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    .stat-card h4 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+    .stat-card p {
+        font-size: 1.5rem;
+        margin: 0;
+    }
+    .chart-container {
+        max-width: 100%;
+        height: 300px;
+    }
+    .table {
+        background: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .table th, .table td {
+        vertical-align: middle;
+    }
+    .btn-primary {
+        background: linear-gradient(45deg, #5941F2, #00c4ff);
+        border: none;
+        border-radius: 10px;
+        transition: background 0.3s ease;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #3e2fa8, #0096cc);
+    }
+    .error-message {
+        display: none;
+        color: #dc3545;
+        text-align: center;
+        margin-top: 1rem;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 768px) {
+        .analytics-container {
+            padding: 1rem;
+        }
+        .chart-container {
+            height: 250px;
+        }
     }
 </style>
 {% endblock %}
 {% block content %}
-<h2>Analytics</h2>
-<div class="row">
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Total Scans</h5>
-                <p class="card-text" id="total-scans">Loading...</p>
+<div class="analytics-container">
+    <h1 class="text-center mb-4" style="color: #333;"><i class="fas fa-chart-line me-2"></i>Analytics Dashboard</h1>
+    
+    <!-- Stats Cards -->
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="stat-card">
+                <i class="fas fa-image"></i>
+                <h4>Total Detections</h4>
+                <p>{{ total_detections }}</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stat-card">
+                <i class="fas fa-percentage"></i>
+                <h4>Average Confidence</h4>
+                <p>{{ avg_confidence }}%</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stat-card">
+                <i class="fas fa-ruler-combined"></i>
+                <h4>Average Image Size</h4>
+                <p>{{ avg_image_width }}x{{ avg_image_height }} px</p>
             </div>
         </div>
     </div>
-</div>
-<div class="chart-container">
-    <canvas id="fakeRealChart"></canvas>
-</div>
-<div class="chart-container">
-    <canvas id="trendChart"></canvas>
-</div>
-<div class="chart-container">
-    <canvas id="confidenceChart"></canvas>
+    
+    <!-- Charts -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="analytics-card">
+                <h3>Real vs. Fake Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="resultPieChart"></canvas>
+                </div>
+                <div id="pieChartError" class="error-message">Failed to load chart</div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="analytics-card">
+                <h3>Confidence Trends (Last 30 Days)</h3>
+                <div class="chart-container">
+                    <canvas id="confidenceLineChart"></canvas>
+                </div>
+                <div id="lineChartError" class="error-message">Failed to load chart</div>
+            </div>
+        </div>
+        <div class="col-lg-12 mb-4">
+            <div class="analytics-card">
+                <h3>Detections Per Day (Last 30 Days)</h3>
+                <div class="chart-container">
+                    <canvas id="detectionsBarChart"></canvas>
+                </div>
+                <div id="barChartError" class="error-message">Failed to load chart</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Detections Table -->
+    <div class="analytics-card">
+        <h3>Recent Detections</h3>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Image Name</th>
+                    <th>Result</th>
+                    <th>Confidence</th>
+                    <th>Image Size</th>
+                    <th>PDF Report</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for detection in recent_detections %}
+                <tr>
+                    <td>{{ detection.timestamp|date:"Y-m-d H:i" }}</td>
+                    <td>{{ detection.image_name|default:"N/A" }}</td>
+                    <td>
+                        <span class="badge {% if detection.result == 'Real' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ detection.result }}
+                        </span>
+                    </td>
+                    <td>{{ detection.confidence|floatformat:2 }}%</td>
+                    <td>{{ detection.image_width|default:"N/A" }}x{{ detection.image_height|default:"N/A" }}</td>
+                    <td>
+                        {% if detection.pdf_report %}
+                        <a href="{{ detection.pdf_report.url }}" class="btn btn-primary btn-sm" target="_blank">
+                            <i class="fas fa-file-pdf me-1"></i>View
+                        </a>
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No recent detections</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="{% static 'js/analytics.js' %}"></script>
+<!-- <script src="{% static 'js/auth.js' %}"></script> -->
 {% endblock %}

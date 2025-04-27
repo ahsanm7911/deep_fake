@@ -7,7 +7,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+    /* background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); */
     /* background-color: #C9DBF6; */
     /* background-image: url('../../static/images/content-bg2.webp');
             background-size: cover;
@@ -58,6 +58,7 @@ body {
     margin-top: 20px;
 }
 .card {
+    background-color: #bd95f1;
     border: none;
     border-radius: 15px;
     background-color: #fff;
