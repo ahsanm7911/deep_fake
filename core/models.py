@@ -9,13 +9,23 @@ class Profile(models.Model):
     def __str__(self):
         return self.name 
     
+
+
 class History(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    date = models.DateTimeField(auto_now_add=True)
-    image_name = models.CharField(max_length=255)
-    image = models.ImageField(upload_to='history/', blank=True, null=True)
-    result = models.CharField(max_length=50)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='detection_history')
+    image = models.ImageField(upload_to='images/', null=True, blank=True)
+    result = models.CharField(max_length=10, choices=[('Real', 'Real'), ('Fake', 'Fake')])
+    confidence = models.FloatField(default=0.00)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    pdf_report = models.FileField(upload_to='pdfs/', null=True, blank=True)
+    image_name = models.CharField(max_length=255, null=True, blank=True)
+    image_width = models.IntegerField(null=True, blank=True)
+    image_height = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = 'History'
+        verbose_name_plural = 'Histories'
 
     def __str__(self):
-        return f"{self.user.username} - {self.image_name} - {self.result}"
-    
+        return f"{self.user.username} - {self.result} ({self.timestamp})"

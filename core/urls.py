@@ -13,7 +13,6 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('api/detect', views.detect_api, name='detect_api'),
     path('api/analytics', views.analytics_api, name='analytics_api'),
-    path('api/generate-pdf', views.generate_pdf_api, name='generate_pdf_api'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

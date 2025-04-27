@@ -1,36 +1,119 @@
-{% extends 'core/base.html' %}
-{% load static %}
-{% block title %}History{% endblock %}
-{% block content %}
-<h2>History</h2>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Image</th>
-            <th>Image Name</th>
-            <th>Result</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for record in history %}
-        <tr>
-            <td>{{ record.date }}</td>
-            <td>
-                {% if record.image %}
-                    <img src="{{ record.image.url }}" alt="{{ record.image_name }}" style="max-width: 100px; height: auto;">
-                {% else %}
-                    No image
-                {% endif %}
-            </td>
-            <td>{{ record.image_name }}</td>
-            <td>{{ record.result }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="4">No history available.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endblock %}
+{% extends 'corebase.html' %}
+   {% load static %}
+
+   {% block title %}Detection History{% endblock %}
+
+   {% block extra_css %}
+       <style>
+           .card {
+               border: none;
+               border-radius: 15px;
+               box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+               transition: transform 0.3s ease;
+           }
+           .card:hover {
+               transform: translateY(-5px);
+           }
+           .history-image {
+               max-width: 100px;
+               height: auto;
+               border-radius: 5px;
+           }
+           .btn-pdf {
+               background: linear-gradient(45deg, #28a745, #34ce57);
+               border: none;
+               padding: 8px 16px;
+               font-size: 0.9rem;
+           }
+           .btn-pdf:hover {
+               background: linear-gradient(45deg, #218838, #2ca44e);
+           }
+           .table {
+               background: #fff;
+               border-radius: 10px;
+               box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+           }
+           @media (max-width: 767.98px) {
+               .container {
+                   padding: 15px;
+               }
+               .history-image {
+                   max-width: 60px;
+               }
+           }
+       </style>
+   {% endblock %}
+
+   {% block content %}
+       <div class="container mt-5 mb-5">
+           <h1 class="text-center mb-4">Detection History</h1>
+           <p class="text-center text-muted mb-4">View your past deepfake detection results and download reports.</p>
+
+           <div class="row">
+               <div class="col-12">
+                   <div class="card">
+                       <div class="card-body">
+                           <h5 class="card-title"><i class="bi bi-clock-history me-2"></i>Your Detection History</h5>
+                           <div id="historyTable" class="table-responsive">
+                               <table class="table table-hover">
+                                   <thead>
+                                       <tr>
+                                           <th>Image</th>
+                                           <th>Result</th>
+                                           <th>Confidence</th>
+                                           <th>Date</th>
+                                           <th>Image Name</th>
+                                           <th>Dimensions</th>
+                                           <th>PDF Report</th>
+                                       </tr>
+                                   </thead>
+                                   <tbody id="historyBody"></tbody>
+                               </table>
+                           </div>
+                           <div id="noHistory" class="alert alert-info d-none">No detection history found.</div>
+                       </div>
+                   </div>
+               </div>
+           </div>
+       </div>
+   {% endblock %}
+
+   {% block extra_js %}
+       <script>
+           document.addEventListener("DOMContentLoaded", async () => {
+               try {
+                   const response = await fetch("/api/history", {
+                       method: "GET",
+                       headers: {
+                           "Authorization": "Bearer " + localStorage.getItem("token"),
+                       },
+                   });
+                   const data = await response.json();
+
+                   const historyBody = document.getElementById("historyBody");
+                   const noHistory = document.getElementById("noHistory");
+
+                   if (data.history && data.history.length > 0) {
+                       data.history.forEach(record => {
+                           const row = document.createElement("tr");
+                           row.innerHTML = `
+                               <td><img src="${record.image_url || ''}" class="history-image" alt="${record.image_name || 'No image'}"></td>
+                               <td>${record.result}</td>
+                               <td>${(record.confidence * 100).toFixed(2)}%</td>
+                               <td>${record.timestamp}</td>
+                               <td>${record.image_name || 'N/A'}</td>
+                               <td>${record.image_width || 'N/A'} x ${record.image_height || 'N/A'}</td>
+                               <td>${record.pdf_report_url ? `<a href="${record.pdf_report_url}" class="btn btn-pdf" target="_blank"><i class="bi bi-file-earmark-pdf me-1"></i>Download</a>` : 'N/A'}</td>
+                           `;
+                           historyBody.appendChild(row);
+                       });
+                   } else {
+                       noHistory.classList.remove("d-none");
+                   }
+               } catch (error) {
+                   console.error("History fetch error:", error);
+                   alert("Failed to load history.");
+               }
+           });
+       </script>
+   {% endblock %}

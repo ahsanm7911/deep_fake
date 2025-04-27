@@ -14,8 +14,15 @@ import re
 import tensorflow as tf 
 import numpy as np 
 from PIL import Image
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from reportlab.lib.utils import ImageReader
+from io import BytesIO
+from datetime import datetime
 import io 
 import os 
+from django.core.files import File
 
 physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
@@ -148,9 +155,27 @@ def analytics_api(request):
 def dashboard_view(request):
     return render(request, 'core/dashboard.html')
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def history_view(request):
-    history = History.objects.filter(user=request.user)
-    return render(request, 'core/history.html', {'history': history})
+    try:
+        history_records = History.objects.filter(user=request.user).order_by('-timestamp')
+        history_data = [{
+            'id': record.id,
+            'image_url': record.image.url if record.image else None,
+            'result': record.result,
+            'confidence': float(record.confidence),
+            'timestamp': record.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'image_name': record.image_name,
+            'image_width': record.image_width,
+            'image_height': record.image_height,
+            'pdf_report_url': record.pdf_report.url if record.pdf_report else None
+        } for record in history_records]
+        return JsonResponse({'history': history_data})
+    except Exception as e:
+        print(f"History view error: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
 
 def settings_view(request):
     if request.method == 'POST':
@@ -186,37 +211,167 @@ def logout_view(request):
 def detect_api(request):
     print("Detect_api called.")
     if request.method == 'POST':
-        print("Inside request.method.")
-        if model is not None:
-            print("Model not loaded.")
-            return JsonResponse({'error': 'Model not loaded.'}, status=500)
+        try:
+            model = tf.keras.models.load_model(MODEL_PATH)
+        except Exception as e:
+            print(f"Model loading failed: {e}")
+            return JsonResponse({'error': f'Model loading failed: {str(e)}'}, status=500)
+
         try:
             print("Inside detect_api try block.")
             image = request.FILES['image']
             print(f"Image: {image}")
-            img = Image.open(image).resize((128,128)).convert('RGB')
+            img = Image.open(image).resize((128, 128)).convert('RGB')
             img_array = np.array(img) / 127.5 - 1.0
             img_array = np.expand_dims(img_array, axis=0)
             prediction = model.predict(img_array)[0][0]
             result = 'Real' if prediction < 0.5 else 'Fake'
             confidence = 1 - prediction if prediction < 0.5 else prediction
-            History.objects.create(
+
+            # Save image to media/images/
+            image_name = image.name
+            image_path = f'images/{datetime.now().strftime("%Y%m%d_%H%M%S")}_{image_name}'
+            image_full_path = os.path.join(settings.MEDIA_ROOT, image_path)
+            os.makedirs(os.path.dirname(image_full_path), exist_ok=True)
+            with open(image_full_path, 'wb') as f:
+                for chunk in image.chunks():
+                    f.write(chunk)
+
+            # Create History record
+            history = History.objects.create(
                 user=request.user,
-                image_name=image.name,
-                image=image,
-                result=f"{result} (Confidence: {(confidence * 100):.2f}%)"
+                image=image_path,
+                result=result,
+                confidence=confidence,
+                image_name=image_name,
+                image_width=img.width,
+                image_height=img.height
             )
-            return JsonResponse({'result': result, 'confidence': float(confidence)})
+
+            # Generate PDF
+            buffer = BytesIO()
+            c = canvas.Canvas(buffer, pagesize=letter)
+            width, height = letter
+
+            # Heading
+            c.setFont("Helvetica-Bold", 20)
+            c.drawString(1 * inch, height - 1 * inch, "DeepFake Detection Report")
+
+            # User Information
+            c.setFont("Helvetica", 12)
+            c.drawString(1 * inch, height - 1.5 * inch, f"User: {request.user.profile.name}")
+            c.drawString(1 * inch, height - 1.75 * inch, f"Email: {request.user.email}")
+            c.drawString(1 * inch, height - 2 * inch, f"Date: {history.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+
+            # Image
+            if os.path.exists(image_full_path):
+                img_reader = ImageReader(image_full_path)
+                img_width, img_height = 200, 200
+                c.drawImage(img_reader, 1 * inch, height - 4.5 * inch, width=img_width, height=img_height)
+            else:
+                c.drawString(1 * inch, height - 4.5 * inch, "Image not found")
+
+            # Image Information
+            c.drawString(1 * inch, height - 5 * inch, f"Image Name: {image_name}")
+            c.drawString(1 * inch, height - 5.25 * inch, f"Dimensions: {img.width} x {img.height} pixels")
+
+            # Detection Results
+            c.drawString(1 * inch, height - 5.75 * inch, f"Result: {result}")
+            c.drawString(1 * inch, height - 6 * inch, f"Confidence: {float(confidence):.2%}")
+
+            # Finalize PDF
+            c.showPage()
+            c.save()
+            buffer.seek(0)
+
+            # Save PDF to History
+            pdf_filename = f'pdfs/report_{history.id}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+            history.pdf_report.save(pdf_filename, File(buffer))
+            history.save()
+
+            print(f"History record created: ID {history.id}, PDF saved: {pdf_filename}")
+            return JsonResponse({
+                'result': result,
+                'confidence': float(confidence),
+                'history_id': history.id,
+                'image_name': image_name,
+                'image_width': img.width,
+                'image_height': img.height,
+                'pdf_report_url': f"{settings.MEDIA_URL}{pdf_filename}"
+            })
         except Exception as e:
             print(f"Detection failed: {e}")
-            return JsonResponse({'error': f'Detection failed: {str(e)}'}, status=400) 
+            return JsonResponse({'error': f'Detection failed: {str(e)}'}, status=400)
     return JsonResponse({"error": "Invalid request"}, status=400)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def generate_pdf_api(request):
-    if request.method == 'POST':
-        pdf_buffer = None
-        # Generate PDF with ReportLab (placeholder)
-        return FileResponse(pdf_buffer, as_attachment=True, filename='deepfake_report.pdf')
-    return JsonResponse({"error": "Invalid request"}, status=400)
+def generate_pdf(request):
+    try:
+        # Extract data from request
+        history_id = request.data.get('history_id')
+        result = request.data.get('result')
+        confidence = request.data.get('confidence')
+        image_name = request.data.get('image_name')
+        image_width = request.data.get('image_width')
+        image_height = request.data.get('image_height')
+
+        if not all([history_id, result, confidence, image_name, image_width, image_height]):
+            return JsonResponse({'error': 'Missing required data'}, status=400)
+
+        # Get History record
+        try:
+            history = History.objects.get(id=history_id, user=request.user)
+        except History.DoesNotExist:
+            return JsonResponse({'error': 'History record not found'}, status=404)
+
+        # Create PDF in memory
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=letter)
+        width, height = letter
+
+        # Heading
+        c.setFont("Helvetica-Bold", 20)
+        c.drawString(1 * inch, height - 1 * inch, "DeepFake Detection Report")
+
+        # User Information
+        c.setFont("Helvetica", 12)
+        c.drawString(1 * inch, height - 1.5 * inch, f"User: {request.user.username}")
+        c.drawString(1 * inch, height - 1.75 * inch, f"Email: {request.user.email}")
+        c.drawString(1 * inch, height - 2 * inch, f"Date: {history.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+
+        # Image
+        image_path = os.path.join(settings.MEDIA_ROOT, history.image.name)
+        if os.path.exists(image_path):
+            img = ImageReader(image_path)
+            img_width, img_height = 200, 200
+            c.drawImage(img, 1 * inch, height - 4.5 * inch, width=img_width, height=img_height)
+        else:
+            c.drawString(1 * inch, height - 4.5 * inch, "Image not found")
+
+        # Image Information
+        c.drawString(1 * inch, height - 5 * inch, f"Image Name: {image_name}")
+        c.drawString(1 * inch, height - 5.25 * inch, f"Dimensions: {image_width} x {image_height} pixels")
+
+        # Detection Results
+        c.drawString(1 * inch, height - 5.75 * inch, f"Result: {result}")
+        c.drawString(1 * inch, height - 6 * inch, f"Confidence: {float(confidence):.2%}")
+
+        # Finalize PDF
+        c.showPage()
+        c.save()
+        buffer.seek(0)
+
+        # Save PDF to History
+        pdf_filename = f'pdfs/report_{history_id}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+        history.pdf_report.save(pdf_filename, File(buffer))
+        history.save()
+
+        # Return PDF as downloadable file
+        buffer.seek(0)
+        response = FileResponse(buffer, as_attachment=True, filename=f"deepfake_report_{history_id}.pdf")
+        return response
+    except Exception as e:
+        print(f"PDF generation error: {e}")
+        return JsonResponse({'error': str(e)}, status=500)

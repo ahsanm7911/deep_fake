@@ -1,4 +1,5 @@
-console.log("deepfake.js loaded.")
+console.log("deepfake.js loaded.");
+
 document.addEventListener('DOMContentLoaded', function() {
     // Verify elements exist
     const dropZone = document.getElementById('dropZone');
@@ -8,24 +9,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const progressBar = document.querySelector('.progress');
     const progressBarInner = progressBar ? progressBar.querySelector('.progress-bar') : null;
     const recentActivity = document.getElementById('recentActivity');
+    const downloadPdfButton = document.getElementById('downloadPdfButton');
+    const resultText = document.getElementById('resultText');
+    const confidenceText = document.getElementById('confidenceText');
 
-    console.log("Drop Zone: ", dropZone)
-    console.log("Image Input: ", imageInput)
-    console.log("Detect Button: ", detectButton)
-    console.log("Result Div: ", resultDiv)
-    console.log("Progress Bar: ", progressBar)
-    console.log("Progress Bar Inner: ", progressBarInner)
-    console.log("Recent Activity: ", recentActivity)
     if (!dropZone || !imageInput || !detectButton || !resultDiv || !progressBarInner || !recentActivity) {
-        console.error('Missing DOM elements:', {
+        console.error('Missing critical DOM elements:', {
             dropZone: !!dropZone,
             imageInput: !!imageInput,
             detectButton: !!detectButton,
             resultDiv: !!resultDiv,
             progressBarInner: !!progressBarInner,
-            recentActivity: !!recentActivity
+            recentActivity: !!recentActivity,
+            downloadPdfButton: !!downloadPdfButton,
+            resultText: !!resultText,
+            confidenceText: !!confidenceText
         });
         return;
+    }
+
+    // Log non-critical missing elements
+    if (!downloadPdfButton || !resultText || !confidenceText) {
+        console.warn('Non-critical DOM elements missing:', {
+            downloadPdfButton: !!downloadPdfButton,
+            resultText: !!resultText,
+            confidenceText: !!confidenceText
+        });
     }
 
     // Handle drag-and-drop
@@ -47,6 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (files.length > 0) {
             imageInput.files = files;
             displayPreview(files[0]);
+            detectButton.disabled = false;
             console.log('File dropped:', files[0].name);
         }
     });
@@ -55,6 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
     imageInput.addEventListener('change', () => {
         if (imageInput.files.length > 0) {
             displayPreview(imageInput.files[0]);
+            detectButton.disabled = false;
             console.log('File selected via input:', imageInput.files[0].name);
         }
     });
@@ -126,28 +137,52 @@ document.addEventListener('DOMContentLoaded', function() {
             const confidence = (data.confidence * 100).toFixed(2);
             const badgeClass = result === 'Real' ? 'bg-success' : 'bg-danger';
 
-            resultDiv.innerHTML = `
-                <span class="badge ${badgeClass}">${result}</span>
-                <p>Confidence: ${confidence}%</p>
-            `;
+            // Update result with existing HTML from dashboard.html
+            resultDiv.classList.remove('d-none');
+            if (resultText) {
+                resultText.textContent = result;
+                resultText.classList.remove('bg-success', 'bg-danger');
+                resultText.classList.add(badgeClass);
+            } else {
+                console.warn('resultText element not found; skipping result update');
+            }
+            if (confidenceText) {
+                confidenceText.textContent = `${confidence}%`;
+            } else {
+                console.warn('confidenceText element not found; skipping confidence update');
+            }
+            if (downloadPdfButton && data.pdf_report_url) {
+                downloadPdfButton.href = data.pdf_report_url;
+                downloadPdfButton.classList.remove('d-none');
+                console.log('PDF download button displayed with href:', data.pdf_report_url);
+            } else if (!downloadPdfButton) {
+                console.warn('downloadPdfButton element not found; PDF link skipped');
+            }
+
+            // Update progress bar
             progressBarInner.style.width = `${confidence}%`;
             progressBarInner.classList.remove('bg-success', 'bg-danger');
             progressBarInner.classList.add(result === 'Real' ? 'bg-success' : 'bg-danger');
-            console.log('Result displayed:', { result, confidence });
+            console.log('Progress bar updated:', { width: `${confidence}%`, class: badgeClass });
 
             // Update recent activity
             const timestamp = new Date().toLocaleString();
+            const pdfLink = data.pdf_report_url ? `<a href="${data.pdf_report_url}" target="_blank">View PDF</a>` : '';
             const activityItem = `
                 <div class="list-group-item">
                     <i class="fas fa-image me-2"></i>
                     Image detected as <strong>${result}</strong> (${confidence}% confidence) at ${timestamp}
+                    ${pdfLink}
                 </div>
             `;
-            recentActivity.innerHTML = activityItem + recentActivity.innerHTML;
+            recentActivity.innerHTML = activityItem + (recentActivity.children.length > 0 ? recentActivity.innerHTML : '');
             if (recentActivity.children.length > 5) {
                 recentActivity.removeChild(recentActivity.lastChild);
             }
-            console.log('Recent activity updated');
+            if (recentActivity.querySelector('p.text-muted')) {
+                recentActivity.innerHTML = activityItem;
+            }
+            console.log('Recent activity updated with PDF link:', { pdfLink });
         })
         .catch(error => {
             resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
